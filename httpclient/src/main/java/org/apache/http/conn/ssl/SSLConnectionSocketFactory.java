@@ -33,20 +33,13 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
+import javax.net.ssl.*;
 import javax.security.auth.x500.X500Principal;
 
+import com.santaba.sitemonitor.util.httpclientnew.SMMetrics;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
@@ -334,7 +327,13 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
             if (this.log.isDebugEnabled()) {
                 this.log.debug("Connecting socket to " + remoteAddress + " with timeout " + connectTimeout);
             }
+
+            long start = System.currentTimeMillis();
             sock.connect(remoteAddress, connectTimeout);
+            long end = System.currentTimeMillis();
+
+            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
+
         } catch (final IOException ex) {
             try {
                 sock.close();
@@ -346,7 +345,9 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
         if (sock instanceof SSLSocket) {
             final SSLSocket sslsock = (SSLSocket) sock;
             this.log.debug("Starting handshake");
-            sslsock.startHandshake();
+
+            _doHandshake(sslsock);
+//            sslsock.startHandshake();
             verifyHostname(sslsock, host.getHostName());
             return sock;
         } else {
@@ -391,7 +392,8 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
 
         prepareSocket(sslsock);
         this.log.debug("Starting handshake");
-        sslsock.startHandshake();
+//        sslsock.startHandshake();
+        _doHandshake(sslsock);
         verifyHostname(sslsock, target);
         return sslsock;
     }
@@ -473,4 +475,34 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
         }
     }
 
+
+    private void _doHandshake(SSLSocket sock) throws IOException {
+        sock.addHandshakeCompletedListener(new SMHandShakeConpletedListener(SMMetrics.INSTANCE.getMetrics(), sock));
+        sock.startHandshake();
+    }
+
+
+    protected class SMHandShakeConpletedListener implements HandshakeCompletedListener {
+
+        private final HashMap<String, Object> _metrics;
+        private volatile SSLSocket _socket;
+        private volatile long _start;
+
+        public SMHandShakeConpletedListener(HashMap<String, Object> metrics, SSLSocket sock) {
+            _metrics = metrics;
+            _socket = sock;
+            _start = System.currentTimeMillis();
+        }
+
+        @Override
+        public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
+            long epoch = System.currentTimeMillis();
+
+            // Logger
+
+            synchronized (_metrics) {
+                _metrics.put(SMMetrics.SSL_HANDSHAKE_TIME, epoch - _start);
+            }
+        }
+    }
 }

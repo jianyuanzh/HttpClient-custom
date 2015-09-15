@@ -38,16 +38,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import com.santaba.common.logger.LogMsg;
+import com.santaba.sitemonitor.util.httpclientnew.SMMetrics;
+import org.apache.http.*;
 import org.apache.http.annotation.NotThreadSafe;
+import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.config.MessageConstraints;
 import org.apache.http.conn.ManagedHttpClientConnection;
 import org.apache.http.entity.ContentLengthStrategy;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.DefaultBHttpClientConnection;
 import org.apache.http.io.HttpMessageParserFactory;
 import org.apache.http.io.HttpMessageWriterFactory;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Default {@link ManagedHttpClientConnection} implementation.
@@ -95,6 +99,86 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
     public void shutdown() throws IOException {
         this.shutdown = true;
         super.shutdown();
+    }
+
+    @Override
+    public HttpResponse receiveResponseHeader() throws HttpException, IOException {
+        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_HEADER_READ_TIME, System.currentTimeMillis());
+        HttpResponse response =  super.receiveResponseHeader();
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_READ_TIME, System.currentTimeMillis());
+
+        return response;
+    }
+
+    @Override
+    public void receiveResponseEntity(HttpResponse response) throws HttpException, IOException {
+        super.receiveResponseEntity(response);
+
+        ContentType contentType = ContentType.get(response.getEntity());
+        String mime = null;
+        String charset = null;
+        if (contentType != null) {
+            mime = contentType.getMimeType();
+            charset = contentType.getCharset().name();
+        }
+
+        // manualy intercept response instead of use SMResponseInterceptor
+        HttpEntity entity = response.getEntity();
+
+        Header contentEncoding = entity.getContentEncoding();
+        if (contentEncoding != null) {
+            for (HeaderElement codec : contentEncoding.getElements()) {
+                if (codec.getName().equalsIgnoreCase("gzip")) {
+                    LogMsg.debug("Got gzip content");
+                    response.setEntity(new GzipDecompressingEntity(response.getEntity()));
+                }
+            }
+        }
+
+        String body = EntityUtils.toString(response.getEntity(), "UTF-8");
+
+        long epoch = System.currentTimeMillis();
+        LogMsg.debug("SMconnection.receiveResponseEntity", String.format(
+                "Finish read response at - %s. mime type = %s, charset = %s",
+                epoch, mime, charset
+        ));
+
+        LogMsg.trace(String.format("HttpResponse Payload (%d bytes)-\n%s", body.length(), ""));
+
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_READ_TIME, epoch, true);   // in sitemonitor's SMConnection, third param is not set.
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_BODY, body, true);
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_MIME, mime, true);
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_CHARSET, charset, true);
+    }
+
+    @Override
+    public void sendRequestHeader(HttpRequest request) throws HttpException, IOException {
+        LogMsg.debug("SMConnection.sendRequestHeader", "Sending request header: " + request.getRequestLine());
+
+        super.sendRequestHeader(request);
+
+        // it's possible there's no entitty (payload) to send
+
+        long epoch = System.currentTimeMillis();
+        LogMsg.debug("SMConnection.sendRequestHeader", "Finish sending request header at - " + epoch);
+
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_SENT_TIME, System.currentTimeMillis());
+
+        Header[] headers = request.getAllHeaders();
+        for (Header header : headers) {
+            LogMsg.debug("SMConnection.sendRequestHeader", ">> " + header.toString());
+        }
+    }
+
+    @Override
+    public void sendRequestEntity(HttpEntityEnclosingRequest request) throws HttpException, IOException {
+        LogMsg.debug("SMConnection.sendRequestEntity", "Sending request entity ...  ");
+
+        super.sendRequestEntity(request);
+
+        long epoch = System.currentTimeMillis();
+        LogMsg.debug("SMConnection.sendRequestEntity", "Finish sending request entity at - " + epoch);
+        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_SENT_TIME, epoch);
     }
 
     @Override
