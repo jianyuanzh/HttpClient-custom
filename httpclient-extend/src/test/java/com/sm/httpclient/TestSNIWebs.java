@@ -1,6 +1,7 @@
-package com.yflog.httpclient;
+package com.sm.httpclient;
 
 import com.santaba.sitemonitor.util.httpclient.SMMetrics;
+import com.santaba.sitemonitor.util.httpclient.SMSSLConnectionSocketFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.config.Registry;
@@ -37,10 +38,10 @@ public class TestSNIWebs {
      * 4. https://iland.pandell.com
      */
     private String[] sniWebs = new String[]{
-//            "https://chrismeller.com",
-            "https://www.five9.com",
+            "https://chrismeller.com",
+//            "https://www.five9.com",
 //            "https://amicreds.sophosupd.com",  // this guy sometimes do not work
-            "https://iland.pandell.com"
+//            "https://iland.pandell.com"
     };
 
     /**
@@ -96,22 +97,25 @@ public class TestSNIWebs {
         CloseableHttpClient closeableHttpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
 
         for (String web : sniWebs) {
+
+            HttpGet httpGet = new HttpGet(web);
+            HttpResponse response = null;
             try {
-                HttpGet httpGet = new HttpGet(web);
-                HttpResponse response = closeableHttpClient.execute(httpGet);
+                response = closeableHttpClient.execute(httpGet);
                 HttpEntity entity = response.getEntity();
 
                 System.out.println("status: " + response.getStatusLine().getStatusCode() + " for web: " + web);
                 if (entity != null) {
                     System.out.println("response content:" + EntityUtils.toString(entity).length());
                 }
-
-                System.out.println(SMMetrics.INSTANCE.getMetrics());
-
             }
             catch (IOException e) {
                 System.out.println("exception for web: " + web + ", exception message: " + e.getMessage());
             }
+
+            System.out.println(SMMetrics.INSTANCE.getMetrics());
+
+
         }
     }
 

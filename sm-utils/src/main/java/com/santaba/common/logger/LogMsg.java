@@ -15,4 +15,12 @@ public class LogMsg {
     public static void trace(String format) {
 
     }
+
+    public static void error(String s) {
+        System.out.println(s);
+    }
+
+    public static void warn(String s) {
+        System.out.println(s);
+    }
 }
