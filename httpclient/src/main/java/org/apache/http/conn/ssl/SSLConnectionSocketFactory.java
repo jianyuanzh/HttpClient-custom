@@ -39,7 +39,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.*;
 import javax.security.auth.x500.X500Principal;
 
-import com.santaba.sitemonitor.util.httpclientnew.SMMetrics;
+import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;

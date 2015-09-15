@@ -39,7 +39,7 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
 import com.santaba.common.logger.LogMsg;
-import com.santaba.sitemonitor.util.httpclientnew.SMMetrics;
+import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import org.apache.http.*;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.client.entity.GzipDecompressingEntity;
@@ -122,7 +122,7 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
             charset = contentType.getCharset().name();
         }
 
-        // manualy intercept response instead of use SMResponseInterceptor
+//        // manualy intercept response instead of use SMResponseInterceptor
         HttpEntity entity = response.getEntity();
 
         Header contentEncoding = entity.getContentEncoding();
@@ -135,6 +135,7 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
             }
         }
 
+        // TODO : when body got here, it consumes the entity of response, at response, it will cause "exception message: Stream closed" exception
         String body = EntityUtils.toString(response.getEntity(), "UTF-8");
 
         long epoch = System.currentTimeMillis();

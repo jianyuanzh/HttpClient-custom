@@ -34,6 +34,8 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 
+import com.santaba.common.logger.LogMsg;
+import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import org.apache.http.MessageConstraintException;
 import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.config.MessageConstraints;
@@ -153,6 +155,10 @@ public class SessionInputBufferImpl implements SessionInputBuffer, BufferInfo {
         final int off = this.bufferlen;
         final int len = this.buffer.length - off;
         l = streamRead(this.buffer, off, len);
+
+        long epoch = System.currentTimeMillis();
+        LogMsg.debug("SMSocketInputBuffer.fillBuffer", "First byte read at - " + epoch);
+        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_BYTE_READ_TIME, epoch);
         if (l == -1) {
             return -1;
         } else {

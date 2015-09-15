@@ -34,6 +34,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
+import com.santaba.common.logger.LogMsg;
+import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
@@ -108,8 +110,17 @@ public class DefaultHttpClientConnectionOperator implements HttpClientConnection
             throw new UnsupportedSchemeException(host.getSchemeName() +
                     " protocol is not supported");
         }
+        long start = System.currentTimeMillis();
         final InetAddress[] addresses = host.getAddress() != null ?
                 new InetAddress[] { host.getAddress() } : this.dnsResolver.resolve(host.getHostName());
+        long epoch = System.currentTimeMillis();
+
+        LogMsg.debug("SMConnectionOprator.openConnection", String.format(
+                "DNS resolved start at %s, finished at - %d",
+                start, epoch
+        ));
+
+        SMMetrics.INSTANCE.setMetric(SMMetrics.DNS_RESOLVE_TIME, epoch - start);
         final int port = this.schemePortResolver.resolve(host);
         for (int i = 0; i < addresses.length; i++) {
             final InetAddress address = addresses[i];

@@ -1,4 +1,4 @@
-package com.santaba.sitemonitor.util.httpclientnew;
+package com.santaba.sitemonitor.util.httpclient;
 
 import java.util.HashMap;
 

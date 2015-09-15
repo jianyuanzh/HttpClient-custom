@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import org.apache.http.HttpHost;
 import org.apache.http.annotation.Immutable;
 import org.apache.http.protocol.HttpContext;
@@ -71,7 +72,13 @@ public class PlainConnectionSocketFactory implements ConnectionSocketFactory {
             sock.bind(localAddress);
         }
         try {
+            long start = System.currentTimeMillis();
             sock.connect(remoteAddress, connectTimeout);
+            long end = System.currentTimeMillis();
+
+            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
+
+
         } catch (final IOException ex) {
             try {
                 sock.close();
