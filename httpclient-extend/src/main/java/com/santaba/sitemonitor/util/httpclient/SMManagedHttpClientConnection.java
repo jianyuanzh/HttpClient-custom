@@ -34,6 +34,7 @@ import org.apache.http.annotation.NotThreadSafe;
 import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.config.MessageConstraints;
 import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentLengthStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.io.HttpMessageParserFactory;
@@ -133,8 +134,9 @@ public class SMManagedHttpClientConnection extends SMBHttpClientConnection
             }
         }
 
-        // TODO : when body got here, it consumes the entity of response, at response, it will cause "exception message: Stream closed" exception
-        String body = EntityUtils.toString(response.getEntity(), "UTF-8");
+        // make entity reusable
+        HttpEntity bufEntity = new BufferedHttpEntity(response.getEntity());
+        String body = EntityUtils.toString(bufEntity, "UTF-8");
 
         long epoch = System.currentTimeMillis();
         LogMsg.debug("SMconnection.receiveResponseEntity", String.format(
@@ -148,6 +150,9 @@ public class SMManagedHttpClientConnection extends SMBHttpClientConnection
         SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_BODY, body, true);
         SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_MIME, mime, true);
         SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_CHARSET, charset, true);
+
+        // set back the entity, to make sure entity can be read again
+        response.setEntity(bufEntity);
     }
 
     @Override

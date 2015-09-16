@@ -3,29 +3,22 @@ package com.sm.httpclient;
 import com.santaba.sitemonitor.util.httpclient.SMRegistryFactory;
 import com.santaba.sitemonitor.util.httpclient.base.SMManagedHttpClientConnectionFactory;
 import com.santaba.sitemonitor.util.httpclient.SMMetrics;
-import com.santaba.sitemonitor.util.httpclient.SMSSLConnectionSocketFactory;
 import com.santaba.sitemonitor.util.httpclient.base.SMBasicHttpClientConnectionManager;
 import org.apache.http.HttpEntity;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.HttpResponse;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
-import javax.net.ssl.HostnameVerifier;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 /**
@@ -41,8 +34,8 @@ public class TestSNIWebs {
      * 4. https://iland.pandell.com
      */
     private String[] sniWebs = new String[]{
-            "https://chrismeller.com",
-//            "https://www.five9.com",
+//            "https://chrismeller.com",
+            "https://www.five9.com",
 //            "https://amicreds.sophosupd.com",  // this guy sometimes do not work
 //            "https://iland.pandell.com"
     };
@@ -92,9 +85,19 @@ public class TestSNIWebs {
         for (String web : sniWebs) {
 
             HttpGet httpGet = new HttpGet(web);
+            RequestConfig config = RequestConfig.copy(RequestConfig.DEFAULT)
+                    .setConnectTimeout(50000)
+                    .setSocketTimeout(50000)
+                    .build();
+            httpGet.setConfig(config);
+
+            HttpClientContext context = HttpClientContext.create();
+
+            System.out.printf("context:" + context.getConnection());
             HttpResponse response = null;
             try {
-                response = closeableHttpClient.execute(httpGet);
+                response = closeableHttpClient.execute(httpGet, context);
+
                 HttpEntity entity = response.getEntity();
 
                 System.out.println("status: " + response.getStatusLine().getStatusCode() + " for web: " + web);
@@ -105,6 +108,8 @@ public class TestSNIWebs {
             catch (IOException e) {
                 System.out.println("exception for web: " + web + ", exception message: " + e.getMessage());
             }
+
+            System.out.println("context:" + context.getConnection());
 
 //            System.out.println(SMMetrics.INSTANCE.getMetrics());
 
