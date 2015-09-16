@@ -120,7 +120,7 @@ public class DefaultHttpClientConnectionOperator implements HttpClientConnection
                 start, epoch
         ));
 
-        SMMetrics.INSTANCE.setMetric(SMMetrics.DNS_RESOLVE_TIME, epoch - start);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.DNS_RESOLVE_TIME, epoch - start);
         final int port = this.schemePortResolver.resolve(host);
         for (int i = 0; i < addresses.length; i++) {
             final InetAddress address = addresses[i];

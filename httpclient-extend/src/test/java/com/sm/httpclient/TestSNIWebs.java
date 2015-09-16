@@ -1,19 +1,21 @@
 package com.sm.httpclient;
 
+import com.santaba.sitemonitor.util.httpclient.SMRegistryFactory;
+import com.santaba.sitemonitor.util.httpclient.base.SMManagedHttpClientConnectionFactory;
 import com.santaba.sitemonitor.util.httpclient.SMMetrics;
 import com.santaba.sitemonitor.util.httpclient.SMSSLConnectionSocketFactory;
+import com.santaba.sitemonitor.util.httpclient.base.SMBasicHttpClientConnectionManager;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.HttpResponse;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.junit.Test;
 
@@ -24,6 +26,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 
 /**
  * Created by vincent on 9/15/15.
@@ -78,23 +81,13 @@ public class TestSNIWebs {
 
     @Test  //-Djavax.net.debug=ssl
     public void test2() throws KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
-        SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
-        HostnameVerifier hostnameVerifier = SSLConnectionSocketFactory.getDefaultHostnameVerifier();
 
-        sslContextBuilder.loadTrustMaterial(new TrustStrategy() {
-            public boolean isTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                return true;
-            }
-        });
 
-        SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContextBuilder.build(), hostnameVerifier);
 
-        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", PlainConnectionSocketFactory.getSocketFactory())
-                .register("https", sslsf)
+        CloseableHttpClient closeableHttpClient = HttpClients.custom()
+//                .setSSLSocketFactory(new SMSSLConnectionSocketFactory(SSLContexts.createDefault()))   // this setting will be overwrite by net one
+                .setConnectionManager(new SMBasicHttpClientConnectionManager(SMRegistryFactory.createDefault(), new SMManagedHttpClientConnectionFactory()))
                 .build();
-
-        CloseableHttpClient closeableHttpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
 
         for (String web : sniWebs) {
 
@@ -113,9 +106,18 @@ public class TestSNIWebs {
                 System.out.println("exception for web: " + web + ", exception message: " + e.getMessage());
             }
 
-            System.out.println(SMMetrics.INSTANCE.getMetrics());
+//            System.out.println(SMMetrics.INSTANCE.getMetrics());
 
+            printMetrics();
+        }
+    }
 
+    private void printMetrics() {
+        HashMap<String, Object> metrics = SMMetrics.INSTANCE.getMetrics();
+        for (String key : metrics.keySet()) {
+            if (!key.equalsIgnoreCase("body")) {
+                System.out.println(key + ": " + metrics.get(key));
+            }
         }
     }
 

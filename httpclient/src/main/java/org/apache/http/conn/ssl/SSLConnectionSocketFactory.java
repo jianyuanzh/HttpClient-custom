@@ -332,7 +332,7 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
             sock.connect(remoteAddress, connectTimeout);
             long end = System.currentTimeMillis();
 
-            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
+//            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
 
         } catch (final IOException ex) {
             try {
@@ -501,7 +501,7 @@ public class SSLConnectionSocketFactory implements LayeredConnectionSocketFactor
             // Logger
 
             synchronized (_metrics) {
-                _metrics.put(SMMetrics.SSL_HANDSHAKE_TIME, epoch - _start);
+//                _metrics.put(SMMetrics.SSL_HANDSHAKE_TIME, epoch - _start);
             }
         }
     }

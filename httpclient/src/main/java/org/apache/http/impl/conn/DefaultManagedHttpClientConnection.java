@@ -103,9 +103,9 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
 
     @Override
     public HttpResponse receiveResponseHeader() throws HttpException, IOException {
-        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_HEADER_READ_TIME, System.currentTimeMillis());
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_HEADER_READ_TIME, System.currentTimeMillis());
         HttpResponse response =  super.receiveResponseHeader();
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_READ_TIME, System.currentTimeMillis());
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_READ_TIME, System.currentTimeMillis());
 
         return response;
     }
@@ -146,10 +146,10 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
 
         LogMsg.trace(String.format("HttpResponse Payload (%d bytes)-\n%s", body.length(), ""));
 
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_READ_TIME, epoch, true);   // in sitemonitor's SMConnection, third param is not set.
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_BODY, body, true);
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_MIME, mime, true);
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_CHARSET, charset, true);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_READ_TIME, epoch, true);   // in sitemonitor's SMConnection, third param is not set.
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_BODY, body, true);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_MIME, mime, true);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_RESPONSE_CHARSET, charset, true);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
         long epoch = System.currentTimeMillis();
         LogMsg.debug("SMConnection.sendRequestHeader", "Finish sending request header at - " + epoch);
 
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_SENT_TIME, System.currentTimeMillis());
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_HEADER_SENT_TIME, System.currentTimeMillis());
 
         Header[] headers = request.getAllHeaders();
         for (Header header : headers) {
@@ -179,7 +179,7 @@ public class DefaultManagedHttpClientConnection extends DefaultBHttpClientConnec
 
         long epoch = System.currentTimeMillis();
         LogMsg.debug("SMConnection.sendRequestEntity", "Finish sending request entity at - " + epoch);
-        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_SENT_TIME, epoch);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.LAST_ENTITY_SENT_TIME, epoch);
     }
 
     @Override

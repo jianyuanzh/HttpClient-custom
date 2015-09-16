@@ -394,6 +394,7 @@ public class SMSSLConnectionSocketFactory implements LayeredConnectionSocketFact
         this.log.debug("Starting handshake");
 //        sslsock.startHandshake();
         _doHandshake(sslsock);
+
         verifyHostname(sslsock, target);
         return sslsock;
     }
@@ -474,7 +475,6 @@ public class SMSSLConnectionSocketFactory implements LayeredConnectionSocketFact
             throw iox;
         }
     }
-
 
     private void _doHandshake(SSLSocket sock) throws IOException {
         sock.addHandshakeCompletedListener(new SMHandShakeConpletedListener(SMMetrics.INSTANCE.getMetrics(), sock));

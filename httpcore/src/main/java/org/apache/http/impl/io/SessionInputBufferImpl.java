@@ -158,7 +158,7 @@ public class SessionInputBufferImpl implements SessionInputBuffer, BufferInfo {
 
         long epoch = System.currentTimeMillis();
         LogMsg.debug("SMSocketInputBuffer.fillBuffer", "First byte read at - " + epoch);
-        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_BYTE_READ_TIME, epoch);
+//        SMMetrics.INSTANCE.setMetric(SMMetrics.FIRST_BYTE_READ_TIME, epoch);
         if (l == -1) {
             return -1;
         } else {

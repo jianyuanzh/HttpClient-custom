@@ -76,7 +76,7 @@ public class PlainConnectionSocketFactory implements ConnectionSocketFactory {
             sock.connect(remoteAddress, connectTimeout);
             long end = System.currentTimeMillis();
 
-            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
+//            SMMetrics.INSTANCE.setMetric(SMMetrics.CONNECT_TIME, end - start);
 
 
         } catch (final IOException ex) {
